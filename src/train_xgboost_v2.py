@@ -1,8 +1,12 @@
-import pandas as pd
+import matplotlib
 
+matplotlib.use("Agg")
+
+import matplotlib.pyplot as plt
+import pandas as pd
+import shap
 from sklearn.metrics import accuracy_score
 from xgboost import XGBClassifier
-
 
 # -------------------------
 # Load data
@@ -25,29 +29,29 @@ df["return_20d"] = df["Adj Close"].pct_change(20)
 
 df["volatility_20d"] = (
     df["return_1d"]
-    .rolling(20)
-    .std()
+        .rolling(20)
+        .std()
 )
 
 df["volume_ratio_20d"] = (
-    df["Volume"]
-    / df["Volume"].rolling(20).mean()
+        df["Volume"]
+        / df["Volume"].rolling(20).mean()
 )
 
 df["ma_10"] = df["Adj Close"].rolling(10).mean()
 df["ma_20"] = df["Adj Close"].rolling(20).mean()
 
 df["distance_ma_10"] = (
-    df["Adj Close"] / df["ma_10"] - 1
+        df["Adj Close"] / df["ma_10"] - 1
 )
 
 df["distance_ma_20"] = (
-    df["Adj Close"] / df["ma_20"] - 1
+        df["Adj Close"] / df["ma_20"] - 1
 )
 
 df["high_low_range"] = (
-    (df["High"] - df["Low"])
-    / df["Adj Close"]
+        (df["High"] - df["Low"])
+        / df["Adj Close"]
 )
 
 # -------------------------
@@ -56,12 +60,12 @@ df["high_low_range"] = (
 
 df["future_return_1d"] = (
     df["Adj Close"]
-    .pct_change()
-    .shift(-1)
+        .pct_change()
+        .shift(-1)
 )
 
 df["target"] = (
-    df["future_return_1d"] > 0
+        df["future_return_1d"] > 0
 ).astype(int)
 
 # -------------------------
@@ -218,6 +222,21 @@ final_model.fit(
 )
 
 # -------------------------
+# SHAP explanation
+# -------------------------
+
+explainer = shap.TreeExplainer(
+    final_model,
+    feature_perturbation="tree_path_dependent",
+)
+
+shap_values = explainer(X_test)
+
+shap.plots.beeswarm(shap_values)
+plt.tight_layout()
+plt.savefig("shap_summary.png", dpi=200)
+
+# -------------------------
 # Final holdout evaluation
 # -------------------------
 
@@ -259,9 +278,9 @@ print(holdout_prob[:10])
 print("\n--- Feature Importance ---")
 
 for feature, importance in sorted(
-    zip(features, final_model.feature_importances_),
-    key=lambda x: x[1],
-    reverse=True,
+        zip(features, final_model.feature_importances_),
+        key=lambda x: x[1],
+        reverse=True,
 ):
     print(
         f"{feature}: {importance:.4f}"

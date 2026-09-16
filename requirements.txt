@@ -4,3 +4,4 @@ scikit-learn
 matplotlib
 yfinance
 xgboost
+shap==0.52.0
