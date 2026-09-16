@@ -95,6 +95,8 @@ model.fit(X_train, y_train)
 # -------------------------
 
 y_pred = model.predict(X_test)
+y_prob = model.predict_proba(X_test)[:, 1]
+print(y_prob[:10])
 
 # -------------------------
 # Evaluate
@@ -110,3 +112,13 @@ print("Test shape:", X_test.shape)
 print()
 print("Model accuracy:", accuracy)
 print("Always-up baseline:", always_up_baseline)
+
+print("Predicted up:", (y_pred == 1).sum())
+print("Predicted down:", (y_pred == 0).sum())
+
+print("\nCoefficients:")
+for feature, coef in zip(features, model.coef_[0]):
+    print(feature, coef)
+
+print("\nIntercept:")
+print(model.intercept_[0])
